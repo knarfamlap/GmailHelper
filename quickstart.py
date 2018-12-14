@@ -3,6 +3,7 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 from apiclient import errors
+import json
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
@@ -34,7 +35,10 @@ def main():
             print(label['name'])
 
     #Calling List of Messages with the query 'Google'
-    print(ListMessagesMatchingQuery(service, 'me','Google'))
+    messagesMatchingQuery = ListMessagesMatchingQuery(service, 'me','Knight News')
+
+    for messages in messagesMatchingQuery:
+        GetMessage(service, 'me', messages['id'])
 
 
 def ListMessagesMatchingQuery(service, user_id, query):
@@ -69,6 +73,26 @@ def ListMessagesMatchingQuery(service, user_id, query):
   except errors.HttpError, error:
     print('An error occurred: %s' % error)
 
+def GetMessage(service, user_id, msg_id):
+  """Get a Message with given ID.
+
+  Args:
+    service: Authorized Gmail API service instance.
+    user_id: User's email address. The special value "me"
+    can be used to indicate the authenticated user.
+    msg_id: The ID of the Message required.
+
+  Returns:
+    A Message.
+  """
+  try:
+    message = service.users().messages().get(userId=user_id, id=msg_id).execute()
+
+    print('Message snippet: %s' % message['snippet'])
+
+    return message
+  except errors.HttpError, error:
+    print('An error occurred: %s' % error)
 
 
 if __name__ == '__main__':
