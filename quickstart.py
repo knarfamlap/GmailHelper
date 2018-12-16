@@ -3,10 +3,10 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 from apiclient import errors
-import json
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
+
 
 def main():
     """Shows basic usage of the Gmail API.
@@ -22,23 +22,18 @@ def main():
         creds = tools.run_flow(flow, store)
     service = build('gmail', 'v1', http=creds.authorize(Http()))
 
-    # Call the Gmail API
-    results = service.users().labels().list(userId='me').execute()
-    # Gmails Labels
-    labels = results.get('labels', [])
-
-    if not labels:
-        print('No labels found.')
-    else:
-        print('Labels:')
-        for label in labels:
-            print(label['name'])
-
     #Calling List of Messages with the query 'Google'
     messagesMatchingQuery = ListMessagesMatchingQuery(service, 'me','Knight News')
 
+    #appends each snippet from each message into messaSnippets
+    msg = []
     for messages in messagesMatchingQuery:
-        GetMessage(service, 'me', messages['id'])
+        #messagSnippets then is imported into script.py and passed into message.html
+        #which is then rendered
+        msg.append(GetMessage(service, 'me', messages['id']))
+
+    return msg
+
 
 
 def ListMessagesMatchingQuery(service, user_id, query):
@@ -88,9 +83,10 @@ def GetMessage(service, user_id, msg_id):
   try:
     message = service.users().messages().get(userId=user_id, id=msg_id).execute()
 
-    print('Message snippet: %s' % message['snippet'])
+    # print('Message snippet: %s' % message['snippet'])
 
-    return message
+    # return message
+    return message['snippet']
   except errors.HttpError, error:
     print('An error occurred: %s' % error)
 

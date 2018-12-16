@@ -1,10 +1,11 @@
 from flask import Flask
 from flask import render_template
-from quickstart import messageSnippets
+from quickstart import main
 
 app = Flask(__name__)
 
-print(len(messageSnippets))
+
+messageSnippets = main()
 
 @app.route('/')
 def main_page(message = messageSnippets):
