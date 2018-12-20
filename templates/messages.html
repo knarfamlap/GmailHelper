@@ -1,15 +1,30 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
 
-    {% for snippet in message %}
-    <p>{{snippet}}</p>
-    <br>
-    {%endfor%}
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
 
-  </body>
+<body>
+
+  <input type="text" name="" value="" placeholder="Enter value to search for query">
+  <select>
+    <option value="Important">Important</option>
+    <option value="Draft">Draft</option>
+    <option value="Spam">Spam</option>
+    <option value="Trash">Trash</option>
+    <option value="Sent">Sent</option>
+    <option value="Unread">Unread</option>
+
+
+  </select>
+  {% for obj in messageList %}
+  <h1>{{obj['From']}}</h1>
+  <p>{{obj['Snippet']}}</p>
+  <br>
+  {%endfor%}
+
+</body>
+
 </html>

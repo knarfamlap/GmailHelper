@@ -22,15 +22,33 @@ def main():
         creds = tools.run_flow(flow, store)
     service = build('gmail', 'v1', http=creds.authorize(Http()))
 
-    #Calling List of Messages with the query 'Google'
+    # Call the Gmail API
+    results = service.users().labels().list(userId='me').execute()
+    # Gmails Labels
+    labels = results.get('labels', [])
+
+    if not labels:
+        print('No labels found.')
+    else:
+        print('Labels:')
+        for label in labels:
+            print(label['name'])
+
+    #Calling List of Messages with the query. Returns msg Id
     messagesMatchingQuery = ListMessagesMatchingQuery(service, 'me','Knight News')
+
 
     #appends each snippet from each message into messaSnippets
     msg = []
     for messages in messagesMatchingQuery:
         #messagSnippets then is imported into script.py and passed into message.html
         #which is then rendered
-        msg.append(GetMessage(service, 'me', messages['id']))
+        snipp = GetMessage(service, 'me', messages['id'])[1]
+        email_sender = GetMessage(service, 'me', messages['id'])[0]
+        info = {'From': email_sender,
+                'Snippet': snipp
+                }
+        msg.append(dict(info))
 
     return msg
 
@@ -81,12 +99,17 @@ def GetMessage(service, user_id, msg_id):
     A Message.
   """
   try:
-    message = service.users().messages().get(userId=user_id, id=msg_id).execute()
+    message = service.users().messages().get(userId=user_id, id=msg_id, format= 'metadata', metadataHeaders='From').execute()
 
-    # print('Message snippet: %s' % message['snippet'])
 
-    # return message
-    return message['snippet']
+    # return from and snippet
+    msg = []
+    msg.append(message['payload']['headers'][0]['value'])
+    msg.append(message['snippet'])
+
+    #index 0 is from
+    #index 1 is snippet
+    return msg
   except errors.HttpError, error:
     print('An error occurred: %s' % error)
 

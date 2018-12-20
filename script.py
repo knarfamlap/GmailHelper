@@ -6,8 +6,7 @@ app = Flask(__name__)
 
 
 messageSnippets = main()
-
 @app.route('/')
-def main_page(message = messageSnippets):
+def main_page(messageList = messageSnippets):
     #rendering messages snippets
-    return render_template('messages.html', message=message)
+    return render_template('messages.html', messageList=messageList)
