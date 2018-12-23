@@ -3,7 +3,15 @@ from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 from apiclient import errors
-
+import base64
+from bs4 import BeautifulSoup
+import re
+import time
+import dateutil.parser as parser
+from datetime import datetime
+import datetime
+import csv
+import json
 
 
 
@@ -96,7 +104,7 @@ unread_messages = ListMessagesWithLabels(service, 'me', label_ids=[label_id_inbo
 
 print('Unread messages in inbox: ', str(len(unread_messages)))
 
-
+formated_messages = [ ]
 
 for msg in unread_messages:
     dict = {}
@@ -107,19 +115,23 @@ for msg in unread_messages:
 
     for hdr in header:
         if hdr['name'] == 'Subject':
-            dict['Subject'] = hdr['value']
+            subject  = hdr['value']
+            dict['Subject'] = subject
         else:
             pass
 
     for dte in header:
         if dte['name'] == 'Date':
-            dict['Date'] = dte['value']
+            date_parser = parser.parse(dte['value'])
+            m_date = date_parser.date()
+            dict['Date'] = str(m_date)
         else:
             pass
 
     for frm in header:
         if frm['name'] == 'From':
-            dict['From'] = frm['value']
+            sender = frm['value']
+            dict['From'] = sender
         else:
             pass
 
@@ -127,25 +139,29 @@ for msg in unread_messages:
 
 
 
+    try:
+        # Fetching message body
+		mssg_parts = payload['parts'] # fetching the message parts
+		part_one  = mssg_parts[0] # fetching first element of the part
+		part_body = part_one['body'] # fetching body of the message
+		part_data = part_body['data'] # fetching data from the body
+		clean_one = part_data.replace("-","+") # decoding from Base64 to UTF-8
+		clean_one = clean_one.replace("_","/") # decoding from Base64 to UTF-8
+		clean_two = base64.b64decode (bytes(clean_one, 'UTF-8')) # decoding from Base64 to UTF-8
+		soup = BeautifulSoup(clean_two , "lxml" )
+		mssg_body = soup.body()
+		# mssg_body is a readible form of message body
+		# depending on the end user's requirements, it can be further cleaned
+		# using regex, beautiful soup, or any other method
+		dict['Message_body'] = mssg_body
+    except:
+        pass
+    formated_messages.append(dict)
 
 
-#Calling List of Messages with the query. Returns msg Id
-# messagesMatchingQuery = ListMessagesMatchingQuery(service, 'me','Knight News')
+with open('data.json', 'w') as outfile:
+    json.dump(formated_messages, outfile)
 
 
-#appends each snippet from each message into messaSnippets
-# msg = []
-# for messages in messagesMatchingQuery:
-#     #messagSnippets then is imported into script.py and passed into message.html
-#     #which is then rendered
-#     snipp = GetMessage(service, 'me', messages['id'])[1]
-#     email_sender = GetMessage(service, 'me', messages['id'])[0]
-#     info = {'From': email_sender,
-#             'Snippet': snipp
-#             }
-#     msg.append(dict(info))
-#
-# for item in msg:
-#     for k,v in item.items():
-#         print(k ,v)
+
 #
