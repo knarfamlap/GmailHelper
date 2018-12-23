@@ -12,6 +12,7 @@ from datetime import datetime
 import datetime
 import csv
 import json
+from tqdm import tqdm
 
 
 
@@ -57,30 +58,6 @@ def ListMessagesMatchingQuery(service, user_id, query):
     print('An error occurred: %s' % error)
 
 
-
-
-
-
-
-###################################################
-def GetMessage(service, user_id, msg_id):
-  try:
-    message = service.users().messages().get(userId=user_id, id=msg_id, format= 'metadata', metadataHeaders='From').execute()
-
-
-    # return from and snippet
-    msg = []
-    msg.append(message['payload']['headers'][0]['value'])
-    msg.append(message['snippet'])
-
-    #index 0 is from
-    #index 1 is snippet
-    return msg
-  except errors.HttpError, error:
-    print('An error occurred: %s' % error)
-
-
-
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 
@@ -99,14 +76,20 @@ label_id_inbox = 'INBOX'
 label_id_unread = 'UNREAD'
 
 
-unread_messages = ListMessagesWithLabels(service, 'me', label_ids=[label_id_inbox, label_id_unread])
+if raw_input("Would you like to seach by query? y/n ").startswith('y'):
+    query = raw_input("Enter query: ")
+    messages = ListMessagesMatchingQuery(service, 'me', query)
+else:
+    messages = ListMessagesWithLabels(service, 'me', label_ids=[label_id_inbox, label_id_unread])
+    print("LOADING UNREAD MESSAGES...")
 
 
-print('Unread messages in inbox: ', str(len(unread_messages)))
+print('Unread messages in inbox: ', str(len(messages)))
 
 formated_messages = [ ]
 
-for msg in unread_messages:
+
+for msg in messages:
     dict = {}
     msg_id = msg['id']
     full_message = service.users().messages().get(userId='me', id=msg_id).execute()
@@ -159,8 +142,11 @@ for msg in unread_messages:
     formated_messages.append(dict)
 
 
+
 with open('data.json', 'w') as outfile:
     json.dump(formated_messages, outfile)
+
+print('DONE!')
 
 
 
